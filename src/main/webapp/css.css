@@ -1,0 +1,67 @@
+:root {
+    box-sizing: border-box;
+}
+
+*,
+::before,
+::after {
+    box-sizing: inherit;
+}
+
+body {
+    padding: 0rem;
+    width: 100vw;
+    margin: 0rem;
+}
+
+div {
+    margin: 0px 0px 0px 0px;
+}
+
+#advert-div>table {
+    width: 100vw;
+    font-size: 2vw;
+}
+
+#advert-div>table>tbody>tr>td:nth-child(2) {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: space-around;
+}
+
+#advert-div>table>tbody>tr>td:nth-child(2)>div {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+}
+
+#advert-div>table>tbody>tr>td:nth-child(2)>div>div {
+    display: flex;
+    flex-direction: column;
+}
+
+#advert-div>table>tbody>tr>td>p {
+    margin-left: 5vw;
+    font-size: 2.5vw;
+}
+
+#advert-div>table>tbody>tr>td:nth-child(2)>div>div>p {
+    margin-top: 0.75vw;
+    margin-bottom: 0.75vw;
+}
+
+#advert-div>table>tbody>tr>td:nth-child(3)>div {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: space-around;
+}
+
+#advert-div>table>tbody>tr>td:nth-child(3)>div>p {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: space-around;
+}

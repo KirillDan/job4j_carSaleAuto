@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Insert advert</title>
+</head>
+
+<body>
+    <label for="mark">Марка автомобиля</label>
+    <input name="mark" type="text">
+    <br>
+    <label for="model">Модель автомобиля</label>
+    <input name="model" type="text">
+    <br>
+    <label for="litre">Объем двигателя</label>
+    <input name="litre" type="text">
+    <br>
+    <label for="horsepower">Мощность двигателя</label>
+    <input name="horsepower" type="text">
+    <br>
+
+    <p>Коробка передач</p>
+
+    <input name="gearbox" type="radio" value="Автомат">
+    <span>Автомат</span>
+
+    <input name="gearbox" type="radio" value="Ручная">
+    <span>Ручная</span>
+
+    <input name="gearbox" type="radio" value="Робот">
+    <span>Робот</span>
+
+    <p>Привод</p>
+
+    <input name="drive" type="radio" value="Задний">
+    <span>Задний</span>
+
+    <input name="drive" type="radio" value="Передний">
+    <span>Передний</span>
+
+    <input name="drive" type="radio" value="Полный">
+    <span>Полный</span>
+    <br>
+    <label for="body">Кузов</label>
+    <input name="body" type="text">
+    <br>
+    <label for="color">Цвет</label>
+    <input name="color" type="text">
+    <br>
+    <label for="year">Год выпуска</label>
+    <input name="year" type="text">
+    <br>
+    <label for="mileage">Пробег</label>
+    <input name="mileage" type="text">
+    <br>
+    <label for="cost">Цена</label>
+    <input name="cost" type="text">
+    <br>
+    <form enctype="multipart/form-data" method="post" action="http://localhost:8080/carSalesArea/upload/">
+        <input id="file-input" type="file" name="f">
+    </form>
+
+    <br>
+    <button id="post-file">Создать новое объявление</button>
+</body>
+<script>
+    document.getElementById("post-file")
+        .addEventListener("click", async function(event) {
+            let responsePostFile = await postFile(urlPostFile)
+            let uuidsJson = await responsePostFile.json()
+            console.log(uuidsJson)
+            let responsePostAdvert = postAdvert(urlPostAdvert, uuidsJson)
+            console.log("click")
+            document.location.href = "http://localhost:8080/carSalesArea/index"
+        });
+</script>
+<script>
+    let urlPostFile = "http://localhost:8080/carSalesArea/upload/"
+
+    async function postFile(url) {
+        const authStorage = window.localStorage;
+        let authToken = authStorage.getItem('authorization')
+        const input = document.getElementById('file-input');
+        const formData = new FormData()
+        formData.append('f', input.files[0])
+        let response = await fetch(url, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'authorization': authToken
+            }
+        });
+        return await response
+    }
+</script>
+<script>
+    let urlPostAdvert = "http://localhost:8080/carSalesArea/advertRepository/"
+
+    async function postAdvert(url, uuidsJson) {
+        let data = {}
+        data.mark = document.querySelector('input[name="mark"]').value
+        data.model = document.querySelector('input[name="model"]').value
+        data.litre = document.querySelector('input[name="litre"]').value
+        data.horsepower = document.querySelector('input[name="horsepower"]').value
+        data.body = document.querySelector('input[name="body"]').value
+        data.color = document.querySelector('input[name="color"]').value
+        data.year = document.querySelector('input[name="year"]').value
+        data.mileage = document.querySelector('input[name="mileage"]').value
+        data.cost = document.querySelector('input[name="cost"]').value
+        document.querySelectorAll('input[name="gearbox"]').forEach(el => {
+            if (el.checked) {
+                data.gearbox = el.value
+            }
+        })
+        document.querySelectorAll('input[name="drive"]').forEach(el => {
+            if (el.checked) {
+                data.drive = el.value
+            }
+        })
+
+        data.user = {}
+
+        const authStorage = window.localStorage;
+        let strAuth = authStorage.getItem('authorization')
+        strAuth = strAuth.substr("Bearer".length + 1)
+        strAuth = strAuth.substr(strAuth.indexOf(".") + 1)
+        strAuth = strAuth.substr(0, strAuth.indexOf("."))
+        let jsonAuth = window.atob(strAuth)
+        let objectAuth = JSON.parse(jsonAuth)
+        data.user.id = objectAuth.sub
+        data.photoIds = uuidsJson.uuids
+        let authToken = authStorage.getItem('authorization')
+
+        let response = await fetch(url, {
+            method: 'POST',
+            body: JSON.stringify(data),
+            headers: {
+                'authorization': authToken
+            }
+        });
+        return await response
+    }
+</script>
+
+</html>

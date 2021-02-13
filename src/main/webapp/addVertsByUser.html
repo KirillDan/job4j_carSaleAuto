@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Table</title>
+    <link rel="stylesheet" href="css.css">
+</head>
+
+<body>
+    <div id="advert-div">
+        <table>
+            <thead></thead>
+            <tbody>
+                <tr>
+                    <td></td>
+                    <td>
+                        <p>Audi A6 allroad</p>
+                        <div>
+                            <div>
+                                <p>3.0 л / 180 л.с.</p>
+                                <p>Автомат</p>
+                                <p>Седан</p>
+                            </div>
+                            <div>
+                                <p>Полный</p>
+                                <p>Серый</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div>
+                            <p>2002</p>
+                            <p>25000 км</p>
+                        </div>
+                    </td>
+                    <td>470000 р</td>
+                    <td>Продано</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</body>
+<script>
+    var carIds = []
+    async function getAll() {
+        const authStorage = window.localStorage;
+
+        let strAuth = authStorage.getItem('authorization')
+        strAuth = strAuth.substr("Bearer".length + 1)
+        strAuth = strAuth.substr(strAuth.indexOf(".") + 1)
+        strAuth = strAuth.substr(0, strAuth.indexOf("."))
+        let jsonAuth = window.atob(strAuth)
+        let objectAuth = JSON.parse(jsonAuth)
+        let userId = objectAuth.sub
+        const urlCarRepository = 'http://localhost:8080/carSalesArea/advertRepository/user/' + userId
+
+        let authToken = authStorage.getItem('authorization')
+        let response = await fetch(urlCarRepository, {
+            method: 'GET',
+            headers: {
+                'authorization': authToken
+            }
+        })
+        return response.json()
+    }
+
+    const visionTable = async function() {
+        let allData = await getAll()
+        let elementTable = document.querySelector("tbody")
+        elementTable.innerHTML = ''
+        let result = ''
+        allData.forEach(row => {
+            carIds.push(row.id)
+
+            let isSell
+            let sellA
+            if (row.sell) {
+                row.sell = true
+                isSell = "Продано"
+                sellA = `<button id="sell-${row.id}" selltype="sell" >Актуально</button>`
+            } else {
+                row.sell = false
+                isSell = "Актуально"
+                sellA = `<button  id="sell-${row.id}" selltype="actl" >Продано</button>`
+            }
+
+            result += `<tr>
+                    <td style="
+                        height: 20vw;
+                        width: 35vw;
+                        background: url(http://localhost:8080/carSalesArea/upload/?name=${row.photoIds[0]}) center no-repeat;
+                        background-size: cover;" ></td>
+                    <td>
+                        <input rowid="${row.id}" type = "text" name = "mark" value = "${row.mark}"> <input rowid="${row.id}" type = "text" name ="model" value = "${row.model}">
+                        <div>
+                            <div>
+                                <p><input rowid="${row.id}" type = "text" name = "litre" value = "${row.litre}" size="2">л / <input rowid="${row.id}" type = "text" name = "horsepower" value = "${row.horsepower}" size="2">л.с.</p>
+                                <p><input rowid="${row.id}" name="gearbox" type="radio" value="Автомат">
+                                    <span>Автомат</span><br>
+                                    <input rowid="${row.id}" name="gearbox" type="radio" value="Ручная">
+                                    <span>Ручная</span><br>
+                                    <input rowid="${row.id}" name="gearbox" type="radio" value="Робот">
+                                    <span>Робот</span></p>
+                                <p><input rowid="${row.id}" type = "text" name = "body" value = "${row.body}" size="7"></p>
+                            </div>
+                            <div>
+                                <p><input rowid="${row.id}" name="drive" type="radio" value="Задний">
+                                    <span>Задний</span><br>
+                                    <input rowid="${row.id}" name="drive" type="radio" value="Передний">
+                                    <span>Передний</span><br>
+                                    <input rowid="${row.id}" name="drive" type="radio" value="Полный">
+                                    <span>Полный</span></p>
+                                <p><input rowid="${row.id}" type = "text" name = "color" value = "${row.color}" size="7"></p>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div>
+                            <p><input rowid="${row.id}" type = "text" name = "year" value = "${row.year}" size="4"></p>
+                            <p><input rowid="${row.id}" type = "text" name = "mileage" value = "${row.mileage}" size="4"> км</p>
+                        </div>
+                    </td>
+                    <td><input rowid="${row.id}" type = "text" name = "cost" value = "${row.cost}" size="5"> р</td>
+                    <td>${isSell}<br>${sellA}<br><button id="post-file-${row.id}" >Изменить</button></td>
+                </tr>`
+        })
+        elementTable.innerHTML = result
+    }
+
+    window.addEventListener("load", async function(event) {
+        await visionTable()
+        console.log("load")
+
+        carIds.forEach(id => {
+            document.getElementById("post-file-" + id).addEventListener("click", async function(event) {
+                postAdvert(id)
+                console.log("click")
+            })
+
+            const button = document.getElementById("sell-" + id);
+            button.addEventListener("click", async function(event) {
+                const selltype = button.getAttribute("selltype")
+                const urlNotSell = "http://localhost:8080/carSalesArea/advertRepository/setActl/" + id
+                const urlSell = "http://localhost:8080/carSalesArea/advertRepository/setSell/" + id
+                if ("sell" == selltype) {
+                    setSellAdvert(urlNotSell)
+                } else {
+                    setSellAdvert(urlSell)
+                }
+                console.log("click")
+            })
+        })
+    })
+</script>
+<script>
+    async function postAdvert(rowid) {
+        const url = "http://localhost:8080/carSalesArea/advertRepository/change"
+        let data = {}
+        data.id = Number(rowid)
+        data.mark = document.querySelector('input[name="mark"][rowid="' + rowid + '"]').value
+        data.model = document.querySelector('input[name="model"][rowid="' + rowid + '"]').value
+        data.litre = document.querySelector('input[name="litre"][rowid="' + rowid + '"]').value
+        data.horsepower = document.querySelector('input[name="horsepower"][rowid="' + rowid + '"]').value
+        data.body = document.querySelector('input[name="body"][rowid="' + rowid + '"]').value
+        data.color = document.querySelector('input[name="color"][rowid="' + rowid + '"]').value
+        data.year = document.querySelector('input[name="year"][rowid="' + rowid + '"]').value
+        data.mileage = document.querySelector('input[name="mileage"][rowid="' + rowid + '"]').value
+        data.cost = document.querySelector('input[name="cost"][rowid="' + rowid + '"]').value
+        document.querySelectorAll('input[name="gearbox"][rowid="' + rowid + '"]').forEach(el => {
+            if (el.checked) {
+                data.gearbox = el.value
+            }
+        })
+        document.querySelectorAll('input[name="drive"][rowid="' + rowid + '"]').forEach(el => {
+            if (el.checked) {
+                data.drive = el.value
+            }
+        })
+
+        const authStorage = window.localStorage;
+        let authToken = authStorage.getItem('authorization')
+
+        let response = await fetch(url, {
+            method: 'POST',
+            body: JSON.stringify(data),
+            headers: {
+                'authorization': authToken
+            }
+        });
+        console.log("post")
+        await response
+        document.location.href = "http://localhost:8080/carSalesArea/index"
+    }
+
+    async function setSellAdvert(url) {
+        const authStorage = window.localStorage;
+        let authToken = authStorage.getItem('authorization')
+
+        let response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'authorization': authToken
+            }
+        });
+        console.log("post")
+        await response
+        document.location.href = "http://localhost:8080/carSalesArea/index"
+    }
+</script>
+
+</html>

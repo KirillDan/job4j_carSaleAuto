@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Table</title>
+    <link rel="stylesheet" href="css.css">
+</head>
+
+<body>
+    <div id="advert-new">
+        <a href="http://localhost:8080/carSalesArea/insert">Добавить новое объявление</a>
+        <a href="http://localhost:8080/carSalesArea/change">Изменить свои объявление</a>
+    </div>
+    <div id="advert-div">
+        <table>
+            <thead></thead>
+            <tbody>
+                <tr>
+                    <td></td>
+                    <td>
+                        <p>Audi A6 allroad</p>
+                        <div>
+                            <div>
+                                <p>3.0 л / 180 л.с.</p>
+                                <p>Автомат</p>
+                                <p>Седан</p>
+                            </div>
+                            <div>
+                                <p>Полный</p>
+                                <p>Серый</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div>
+                            <p>2002</p>
+                            <p>25000 км</p>
+                        </div>
+                    </td>
+                    <td>470000 р</td>
+                    <td>Продано</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</body>
+<script>
+    async function getAll() {
+        const authStorage = window.localStorage;
+        let authToken = authStorage.getItem('authorization')
+        console.log(authToken)
+        const urlCarRepository = 'http://localhost:8080/carSalesArea/advertRepository/'
+        let response = await fetch(urlCarRepository, {
+            method: 'GET',
+            headers: {
+                'authorization': authToken
+            }
+        })
+        return response.json()
+    }
+
+    const visionTable = async function() {
+        let allData = await getAll()
+        let elementTable = document.querySelector("tbody")
+        elementTable.innerHTML = ''
+        let result = ''
+        allData.forEach(row => {
+            let isSell
+            if (row.sell) {
+                isSell = "Продано"
+            } else {
+                isSell = "Актуально"
+            }
+
+            result += `<tr>
+                    <td style="
+                        height: 20vw;
+                        width: 35vw;
+                        background: url(http://localhost:8080/carSalesArea/upload/?name=${row.photoIds[0]}) center no-repeat;
+                        background-size: cover;" ></td>
+                    <td>
+                        <p>${row.mark} ${row.model}</p>
+                        <div>
+                            <div>
+                                <p>${row.litre} л / ${row.horsepower} л.с.</p>
+                                <p>${row.gearbox}</p>
+                                <p>${row.body}</p>
+                            </div>
+                            <div>
+                                <p>${row.drive}</p>
+                                <p>${row.color}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div>
+                            <p>${row.year}</p>
+                            <p>${row.mileage} км</p>
+                        </div>
+                    </td>
+                    <td>${row.cost} р</td>
+                    <td>${isSell}</td>
+                </tr>`
+        })
+        elementTable.innerHTML = result
+    }
+
+    window.addEventListener("load", async function(event) {
+        await visionTable()
+        console.log("load")
+    });
+</script>
+
+</html>
